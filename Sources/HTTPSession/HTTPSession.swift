@@ -2,10 +2,10 @@ import Foundation
 import HTTPTypes
 
 public final class HTTPSession: HTTPSessionProtocol {
-    public let decoder: HTTPDataDecoder
-    public let encoder: HTTPDataEncoder
+    let decoder: HTTPDataDecoder
+    let encoder: HTTPDataEncoder
 
-    public let session: URLSession
+    private let session: URLSession
 
     public let requestMiddlewares = HTTPRequestMiddlewareGroup()
     public let responseMiddlewares = HTTPResponseMiddlewareGroup()
@@ -20,7 +20,25 @@ public final class HTTPSession: HTTPSessionProtocol {
         self.decoder = decoder
     }
 
-    func execute<T: Decodable, D: Encodable>(
+    public func execute<T: Decodable, D: Encodable>(
+        _ request: HTTPRequest,
+        withContent data: D
+    ) async throws -> T {
+        try await self.execute(request, withContent: data).0
+    }
+
+    public func execute<T: Decodable>(
+        _ request: HTTPRequest,
+        withData data: Data
+    ) async throws -> T {
+        try await self.execute(request, withData: data).0
+    }
+
+    public func execute<T: Decodable>(_ request: HTTPRequest) async throws -> T {
+        try await self.execute(request).0
+    }
+
+    public func execute<T: Decodable, D: Encodable>(
         _ request: HTTPRequest,
         withContent data: D
     ) async throws -> (T, HTTPResponse) {
@@ -29,7 +47,7 @@ public final class HTTPSession: HTTPSessionProtocol {
         return (content, response.1)
     }
 
-    func execute<T: Decodable>(
+    public func execute<T: Decodable>(
         _ request: HTTPRequest,
         withData data: Data
     ) async throws -> (T, HTTPResponse) {
@@ -38,7 +56,7 @@ public final class HTTPSession: HTTPSessionProtocol {
         return (content, response.1)
     }
 
-    func execute<T: Decodable>(_ request: HTTPRequest) async throws -> (T, HTTPResponse) {
+    public func execute<T: Decodable>(_ request: HTTPRequest) async throws -> (T, HTTPResponse) {
         let response: (Data, HTTPResponse) = try await self.perform(request)
         let content = try self.decoder.decode(T.self, from: (.data(response.0), response.1))
         return (content, response.1)

@@ -17,6 +17,20 @@ protocol HTTPSessionProtocol: Sendable {
     func execute<T: Decodable, D: Encodable>(
         _ request: HTTPRequest,
         withContent data: D
+    ) async throws -> T
+
+    func execute<T: Decodable>(
+        _ request: HTTPRequest,
+        withData data: Data
+    ) async throws -> T
+
+    func execute<T: Decodable>(
+        _ request: HTTPRequest
+    ) async throws -> T
+
+    func execute<T: Decodable, D: Encodable>(
+        _ request: HTTPRequest,
+        withContent data: D
     ) async throws -> (T, HTTPResponse)
 
     func execute<T: Decodable>(
