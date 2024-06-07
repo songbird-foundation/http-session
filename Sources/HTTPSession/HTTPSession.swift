@@ -24,7 +24,7 @@ public final class HTTPSession: HTTPSessionProtocol {
     /// without executing a HTTP request with it.
     ///
     /// Can be used to execute the request in other environments, e.g. NukeUI image loading.
-    func finalize(request: HTTPRequest) async throws -> HTTPRequest {
+    public func finalize(request: HTTPRequest) async throws -> HTTPRequest {
         var request = request
         try await self.requestMiddlewares.handle(&request)
         return request
@@ -108,7 +108,7 @@ public final class HTTPSession: HTTPSessionProtocol {
         return (rawResponse.0, response)
     }
 
-    func bytes(_ request: HTTPRequest) async throws -> (URLSession.AsyncBytes, HTTPResponse) {
+    public func bytes(_ request: HTTPRequest) async throws -> (URLSession.AsyncBytes, HTTPResponse) {
         var request = request
         try await self.requestMiddlewares.handle(&request)
         let (stream, rawResponse) = try await self.session.bytes(for: request)
