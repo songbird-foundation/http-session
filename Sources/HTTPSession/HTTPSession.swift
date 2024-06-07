@@ -20,6 +20,16 @@ public final class HTTPSession: HTTPSessionProtocol {
         self.decoder = decoder
     }
 
+    /// Creates the final request (processed by all ``requestMiddlewares``)
+    /// without executing a HTTP request with it.
+    ///
+    /// Can be used to execute the request in other environments, e.g. NukeUI image loading.
+    func finalize(request: HTTPRequest) async throws -> HTTPRequest {
+        var request = request
+        try await self.requestMiddlewares.handle(&request)
+        return request
+    }
+
     public func execute<T: Decodable, D: Encodable>(
         _ request: HTTPRequest,
         withContent data: D

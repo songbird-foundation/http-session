@@ -14,6 +14,8 @@ protocol HTTPSessionProtocol: Sendable {
     var requestMiddlewares: HTTPRequestMiddlewareGroup { get }
     var responseMiddlewares: HTTPResponseMiddlewareGroup { get }
 
+    func finalize(request: HTTPRequest) async throws -> HTTPRequest
+
     func execute<T: Decodable, D: Encodable>(
         _ request: HTTPRequest,
         withContent data: D

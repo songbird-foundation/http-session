@@ -1,4 +1,4 @@
-protocol HTTPResponseHandler {
+protocol HTTPResponseHandler: Sendable {
     @Sendable func handle(_ response: HTTPDataResponse) async throws -> HTTPDataResponse
 }
 
