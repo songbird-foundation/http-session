@@ -28,8 +28,8 @@ public enum HTTPResponsePayload {
 }
 
 public struct HTTPDataResponse {
-    let data: HTTPResponsePayload
-    let response: HTTPResponse
+    public let data: HTTPResponsePayload
+    public let response: HTTPResponse
 }
 
 /// Used to create middlewares to process responses received from an implementation of ``HTTPSessionProtocol``.
