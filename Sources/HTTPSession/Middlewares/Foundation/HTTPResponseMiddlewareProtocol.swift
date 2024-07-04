@@ -49,6 +49,7 @@ public protocol HTTPResponseMiddlewareProtocol: Sendable {
 
 public struct HTTPResponseMiddlewareContext: Sendable {
     public let request: HTTPRequest
+    public let requestData: Data?
     public let session: HTTPSession
-    public let next: @Sendable (HTTPDataResponse, HTTPRequest) async throws -> HTTPDataResponse
+    public let next: @Sendable (HTTPDataResponse, (HTTPRequest, Data?)) async throws -> HTTPDataResponse
 }

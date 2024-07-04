@@ -1,9 +1,10 @@
+import struct Foundation.Data
 import HTTPTypes
 
 protocol HTTPResponseHandler: Sendable {
     @Sendable func handle(
         _ response: HTTPDataResponse,
-        from request: HTTPRequest
+        from request: (HTTPRequest, Data?)
     ) async throws -> HTTPDataResponse
 }
 
@@ -47,7 +48,10 @@ public actor HTTPResponseMiddlewareGroup: Sendable {
 }
 
 private struct VoidHandler: HTTPResponseHandler {
-    @Sendable func handle(_ response: HTTPDataResponse, from request: HTTPRequest) async throws -> HTTPDataResponse {
+    @Sendable func handle(
+        _ response: HTTPDataResponse, 
+        from request: (HTTPRequest, Data?)
+    ) async throws -> HTTPDataResponse {
         return response
     }
 }
@@ -56,11 +60,15 @@ private struct FinalHandler: HTTPResponseHandler {
     let middleware: any HTTPResponseMiddlewareProtocol
     let session: HTTPSession
 
-    @Sendable func handle(_ response: HTTPDataResponse, from request: HTTPRequest) async throws -> HTTPDataResponse {
+    @Sendable func handle(
+        _ response: HTTPDataResponse,
+        from request: (HTTPRequest, Data?)
+    ) async throws -> HTTPDataResponse {
         try await self.middleware.handle(
             response,
             context: .init(
-                request: request,
+                request: request.0,
+                requestData: request.1,
                 session: self.session,
                 next: { response, _ in return response }
             )
@@ -71,9 +79,20 @@ private struct FinalHandler: HTTPResponseHandler {
 private struct Handler: HTTPResponseHandler {
     let middleware: any HTTPResponseMiddlewareProtocol
     let session: HTTPSession
-    let next: @Sendable (HTTPDataResponse, HTTPRequest) async throws -> HTTPDataResponse
+    let next: @Sendable (HTTPDataResponse, (HTTPRequest, Data?)) async throws -> HTTPDataResponse
 
-    @Sendable func handle(_ response: HTTPDataResponse, from request: HTTPRequest) async throws -> HTTPDataResponse {
-        return try await self.middleware.handle(response, context: .init(request: request, session: self.session, next: self.next))
+    @Sendable func handle(
+        _ response: HTTPDataResponse,
+        from request: (HTTPRequest, Data?)
+    ) async throws -> HTTPDataResponse {
+        return try await self.middleware.handle(
+            response,
+            context: .init(
+                request: request.0,
+                requestData: request.1,
+                session: self.session,
+                next: self.next
+            )
+        )
     }
 }

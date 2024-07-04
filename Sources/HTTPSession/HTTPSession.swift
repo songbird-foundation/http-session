@@ -82,7 +82,10 @@ public final class HTTPSession: HTTPSessionProtocol, @unchecked Sendable {
         let data = try self.encoder.encode(data, for: request)
         let rawResponse = try await self.session.upload(for: request, from: data)
         let responseHandler = try await self.responseMiddlewares.constructHandler()
-        let response = try await responseHandler.handle(.init(data: .data(rawResponse.0), response: rawResponse.1), from: request)
+        let response = try await responseHandler.handle(
+            .init(data: .data(rawResponse.0), response: rawResponse.1),
+            from: (request, data)
+        )
         return (rawResponse.0, response.response)
     }
 
@@ -94,7 +97,10 @@ public final class HTTPSession: HTTPSessionProtocol, @unchecked Sendable {
         try await self.requestMiddlewares.handle(&request)
         let rawResponse = try await self.session.upload(for: request, from: data)
         let responseHandler = try await self.responseMiddlewares.constructHandler()
-        let response = try await responseHandler.handle(.init(data: .data(rawResponse.0), response: rawResponse.1), from: request)
+        let response = try await responseHandler.handle(
+            .init(data: .data(rawResponse.0), response: rawResponse.1), 
+            from: (request, data)
+        )
         return (rawResponse.0, response.response)
     }
 
@@ -105,7 +111,10 @@ public final class HTTPSession: HTTPSessionProtocol, @unchecked Sendable {
         try await self.requestMiddlewares.handle(&request)
         let rawResponse = try await self.session.data(for: request)
         let responseHandler = try await self.responseMiddlewares.constructHandler()
-        let response = try await responseHandler.handle(.init(data: .data(rawResponse.0), response: rawResponse.1), from: request)
+        let response = try await responseHandler.handle(
+            .init(data: .data(rawResponse.0), response: rawResponse.1), 
+            from: (request, nil)
+        )
         return (rawResponse.0, response.response)
     }
 
@@ -114,7 +123,10 @@ public final class HTTPSession: HTTPSessionProtocol, @unchecked Sendable {
         try await self.requestMiddlewares.handle(&request)
         let (stream, rawResponse) = try await self.session.bytes(for: request)
         let responseHandler = try await self.responseMiddlewares.constructHandler()
-        let response = try await responseHandler.handle(.init(data: .stream(stream), response: rawResponse), from: request)
+        let response = try await responseHandler.handle(
+            .init(data: .stream(stream), response: rawResponse), 
+            from: (request, nil)
+        )
         return (stream, response.response)
     }
 }
