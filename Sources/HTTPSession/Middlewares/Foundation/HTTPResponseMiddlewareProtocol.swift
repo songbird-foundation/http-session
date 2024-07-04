@@ -27,7 +27,10 @@ public enum HTTPResponsePayload {
     }
 }
 
-public typealias HTTPDataResponse = (data: HTTPResponsePayload, response: HTTPResponse)
+public struct HTTPDataResponse {
+    let data: HTTPResponsePayload
+    let response: HTTPResponse
+}
 
 /// Used to create middlewares to process responses received from an implementation of ``HTTPSessionProtocol``.
 ///
@@ -40,6 +43,7 @@ public typealias HTTPDataResponse = (data: HTTPResponsePayload, response: HTTPRe
 public protocol HTTPResponseMiddlewareProtocol: Sendable {
     func handle(
         _ response: HTTPDataResponse,
-        next: @Sendable (HTTPDataResponse) async throws -> HTTPDataResponse
+        from request: HTTPRequest,
+        next: @Sendable (HTTPDataResponse, HTTPRequest) async throws -> HTTPDataResponse
     ) async throws -> HTTPDataResponse
 }

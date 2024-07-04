@@ -53,7 +53,7 @@ public final class HTTPSession: HTTPSessionProtocol {
         withContent data: D
     ) async throws -> (T, HTTPResponse) {
         let response: (Data, HTTPResponse) = try await self.perform(request, withContent: data)
-        let content = try self.decoder.decode(T.self, from: (.data(response.0), response.1))
+        let content = try self.decoder.decode(T.self, from: .init(data: .data(response.0), response: response.1))
         return (content, response.1)
     }
 
@@ -62,13 +62,13 @@ public final class HTTPSession: HTTPSessionProtocol {
         withData data: Data
     ) async throws -> (T, HTTPResponse) {
         let response: (Data, HTTPResponse) = try await self.perform(request, withData: data)
-        let content = try self.decoder.decode(T.self, from: (.data(response.0), response.1))
+        let content = try self.decoder.decode(T.self, from: .init(data: .data(response.0), response: response.1))
         return (content, response.1)
     }
 
     public func execute<T: Decodable>(_ request: HTTPRequest) async throws -> (T, HTTPResponse) {
         let response: (Data, HTTPResponse) = try await self.perform(request)
-        let content = try self.decoder.decode(T.self, from: (.data(response.0), response.1))
+        let content = try self.decoder.decode(T.self, from: .init(data: .data(response.0), response: response.1))
         return (content, response.1)
     }
 
@@ -81,8 +81,8 @@ public final class HTTPSession: HTTPSessionProtocol {
         let data = try self.encoder.encode(data, for: request)
         let rawResponse = try await self.session.upload(for: request, from: data)
         let responseHandler = try await self.responseMiddlewares.constructHandler()
-        let (_, response) = try await responseHandler.handle((.data(rawResponse.0), rawResponse.1))
-        return (rawResponse.0, response)
+        let response = try await responseHandler.handle(.init(data: .data(rawResponse.0), response: rawResponse.1), from: request)
+        return (rawResponse.0, response.response)
     }
 
     @discardableResult public func perform(
@@ -93,8 +93,8 @@ public final class HTTPSession: HTTPSessionProtocol {
         try await self.requestMiddlewares.handle(&request)
         let rawResponse = try await self.session.upload(for: request, from: data)
         let responseHandler = try await self.responseMiddlewares.constructHandler()
-        let (_, response) = try await responseHandler.handle((.data(rawResponse.0), rawResponse.1))
-        return (rawResponse.0, response)
+        let response = try await responseHandler.handle(.init(data: .data(rawResponse.0), response: rawResponse.1), from: request)
+        return (rawResponse.0, response.response)
     }
 
     @discardableResult public func perform(
@@ -104,8 +104,8 @@ public final class HTTPSession: HTTPSessionProtocol {
         try await self.requestMiddlewares.handle(&request)
         let rawResponse = try await self.session.data(for: request)
         let responseHandler = try await self.responseMiddlewares.constructHandler()
-        let (_, response) = try await responseHandler.handle((.data(rawResponse.0), rawResponse.1))
-        return (rawResponse.0, response)
+        let response = try await responseHandler.handle(.init(data: .data(rawResponse.0), response: rawResponse.1), from: request)
+        return (rawResponse.0, response.response)
     }
 
     public func bytes(_ request: HTTPRequest) async throws -> (URLSession.AsyncBytes, HTTPResponse) {
@@ -113,7 +113,7 @@ public final class HTTPSession: HTTPSessionProtocol {
         try await self.requestMiddlewares.handle(&request)
         let (stream, rawResponse) = try await self.session.bytes(for: request)
         let responseHandler = try await self.responseMiddlewares.constructHandler()
-        let (_, response) = try await responseHandler.handle((.stream(stream), rawResponse))
-        return (stream, response)
+        let response = try await responseHandler.handle(.init(data: .stream(stream), response: rawResponse), from: request)
+        return (stream, response.response)
     }
 }
