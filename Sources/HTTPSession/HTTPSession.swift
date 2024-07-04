@@ -129,4 +129,20 @@ public final class HTTPSession: HTTPSessionProtocol, @unchecked Sendable {
         )
         return (stream, response.response)
     }
+
+    public func execute(_ request: HTTPRequest, withData data: Data?) async throws -> HTTPDataResponse {
+        var request = request
+        try await self.requestMiddlewares.handle(&request)
+        let rawResponse = if let data {
+            try await self.session.upload(for: request, from: data)
+        } else {
+            try await self.session.data(for: request)
+        }
+        let responseHandler = try await self.responseMiddlewares.constructHandler()
+        let response = try await responseHandler.handle(
+            .init(data: .data(rawResponse.0), response: rawResponse.1),
+            from: (request, data)
+        )
+        return response
+    }
 }
