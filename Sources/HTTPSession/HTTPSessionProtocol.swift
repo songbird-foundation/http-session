@@ -12,7 +12,7 @@ protocol HTTPSessionProtocol: Sendable {
     var encoder: HTTPDataEncoder { get }
 
     var requestMiddlewares: HTTPRequestMiddlewareGroup { get }
-    var responseMiddlewares: HTTPResponseMiddlewareGroup { get }
+    var responseMiddlewares: HTTPResponseMiddlewareGroup! { get }
 
     func finalize(request: HTTPRequest) async throws -> HTTPRequest
 

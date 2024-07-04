@@ -1,14 +1,14 @@
 import Foundation
 import HTTPTypes
 
-public final class HTTPSession: HTTPSessionProtocol {
+public final class HTTPSession: HTTPSessionProtocol, @unchecked Sendable {
     let decoder: HTTPDataDecoder
     let encoder: HTTPDataEncoder
 
     private let session: URLSession
 
     public let requestMiddlewares = HTTPRequestMiddlewareGroup()
-    public let responseMiddlewares = HTTPResponseMiddlewareGroup()
+    public var responseMiddlewares: HTTPResponseMiddlewareGroup!
 
     public init(
         session: URLSession = .shared,
@@ -18,6 +18,7 @@ public final class HTTPSession: HTTPSessionProtocol {
         self.session = session
         self.encoder = encoder
         self.decoder = decoder
+        self.responseMiddlewares = HTTPResponseMiddlewareGroup(session: self)
     }
 
     /// Creates the final request (processed by all ``requestMiddlewares``)
