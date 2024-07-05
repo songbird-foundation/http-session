@@ -15,18 +15,18 @@ public protocol OAuth2Coordinator: Sendable {
     /// Processes the response, received from the request executed via ``OAuth2Coordinator/constructRefreshRequest()``.
     /// - Parameter response: The bare result, received from the session request.
     /// - Returns: A new token, derived from ``response``, used to execute the pending request.
-    func processRefreshResponse(_ response: Result<(Data, HTTPResponse), Error>) async throws -> Token
+    func processRefreshResponse(_ response: Result<(Data, HTTPResponse), any Error>) async throws -> Token
 
     /// Called if a ``TokenError`` occurs during a HTTP request.
     ///
     /// It allows you to perform appropriate side effects, e.g. showing a login form.
     /// You can also transform the error into anything you find appropriate.
     /// The default implementations returns the original ``TokenError``. without side effects.
-    @Sendable func onTokenError(_ error: TokenError) -> Error
+    @Sendable func onTokenError(_ error: TokenError) async -> any Error
 }
 
 extension OAuth2Coordinator {
-    @Sendable func onTokenError(_ error: TokenError) -> Error {
+    @Sendable func onTokenError(_ error: TokenError) async -> any Error {
         return error
     }
 }
@@ -65,7 +65,7 @@ public actor OAuth2Authenticator: HTTPRequestMiddlewareProtocol {
     let coordinator: any OAuth2Coordinator
     private let session: any HTTPSessionProtocol
 
-    private var refreshTask: Task<Token, Error>? = nil
+    private var refreshTask: Task<Token, any Error>? = nil
     
     /// Creates a new OAuth2Authenticator.
     /// - Parameters:
@@ -128,7 +128,7 @@ public actor OAuth2Authenticator: HTTPRequestMiddlewareProtocol {
             let token = try await self.validToken()
             request.headerFields[.authorization] = "Bearer \(token.value)"
         } catch let error as TokenError {
-            throw self.coordinator.onTokenError(error)
+            throw await self.coordinator.onTokenError(error)
         }
     }
 }

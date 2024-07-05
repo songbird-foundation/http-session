@@ -18,7 +18,8 @@ let package = Package(
                 .product(name: "HTTPTypesFoundation", package: "swift-http-types"),
             ], 
             swiftSettings: [
-                .enableExperimentalFeature("StrictConcurrency=complete")
+                .enableExperimentalFeature("StrictConcurrency=complete"),
+                .enableUpcomingFeature("ExistentialAny")
             ]
         ),
         .testTarget(name: "HTTPSessionTests", dependencies: ["HTTPSession"]),

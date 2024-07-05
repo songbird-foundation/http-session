@@ -2,8 +2,8 @@ import Foundation
 import HTTPTypes
 
 public final class HTTPSession: HTTPSessionProtocol, @unchecked Sendable {
-    let decoder: HTTPDataDecoder
-    let encoder: HTTPDataEncoder
+    let decoder: any HTTPDataDecoder
+    let encoder: any HTTPDataEncoder
 
     private let session: URLSession
 
@@ -12,8 +12,8 @@ public final class HTTPSession: HTTPSessionProtocol, @unchecked Sendable {
 
     public init(
         session: URLSession = .shared,
-        decoder: HTTPDataDecoder = JSONDecoder(),
-        encoder: HTTPDataEncoder = JSONEncoder()
+        decoder: any HTTPDataDecoder = JSONDecoder(),
+        encoder: any HTTPDataEncoder = JSONEncoder()
     ) {
         self.session = session
         self.encoder = encoder

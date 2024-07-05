@@ -6,10 +6,10 @@ import HTTPTypesFoundation
 protocol HTTPSessionProtocol: Sendable {
 
     /// The decoder used to decode the data returned from the endpoint.
-    var decoder: HTTPDataDecoder { get }
+    var decoder: any HTTPDataDecoder { get }
 
     /// The encoder used to encode the body data for the request.
-    var encoder: HTTPDataEncoder { get }
+    var encoder: any HTTPDataEncoder { get }
 
     var requestMiddlewares: HTTPRequestMiddlewareGroup { get }
     var responseMiddlewares: HTTPResponseMiddlewareGroup! { get }
