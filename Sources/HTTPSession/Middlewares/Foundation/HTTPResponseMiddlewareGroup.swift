@@ -2,10 +2,7 @@ import struct Foundation.Data
 import HTTPTypes
 
 protocol HTTPResponseHandler: Sendable {
-    @Sendable func handle(
-        _ response: HTTPDataResponse,
-        from request: (HTTPRequest, Data?)
-    ) async throws -> HTTPDataResponse
+    @Sendable func handle(_ response: HTTPDataResponse) async throws -> HTTPDataResponse
 }
 
 public actor HTTPResponseMiddlewareGroup: Sendable {
@@ -23,13 +20,14 @@ public actor HTTPResponseMiddlewareGroup: Sendable {
         self.middlewares.append(middleware)
     }
 
-    nonisolated func constructHandler() async throws -> any HTTPResponseHandler {
+    nonisolated func constructHandler(for request: (HTTPRequest, Data?)) async throws -> any HTTPResponseHandler {
         let middlewares = await self.middlewares
         guard middlewares.count >= 1 else {
             return VoidHandler()
         }
         var currentHandler: any HTTPResponseHandler = FinalHandler(
             middleware: middlewares[0],
+            request: request,
             session: self.session
         )
         guard middlewares.count > 1 else {
@@ -39,6 +37,7 @@ public actor HTTPResponseMiddlewareGroup: Sendable {
             let handler = Handler(
                 middleware: middlewares[i],
                 session: self.session,
+                request: request,
                 next: currentHandler.handle
             )
             currentHandler = handler
@@ -48,29 +47,24 @@ public actor HTTPResponseMiddlewareGroup: Sendable {
 }
 
 private struct VoidHandler: HTTPResponseHandler {
-    @Sendable func handle(
-        _ response: HTTPDataResponse, 
-        from request: (HTTPRequest, Data?)
-    ) async throws -> HTTPDataResponse {
+    @Sendable func handle(_ response: HTTPDataResponse) async throws -> HTTPDataResponse {
         return response
     }
 }
 
 private struct FinalHandler: HTTPResponseHandler {
     let middleware: any HTTPResponseMiddlewareProtocol
+    let request: (HTTPRequest, Data?)
     let session: HTTPSession
 
-    @Sendable func handle(
-        _ response: HTTPDataResponse,
-        from request: (HTTPRequest, Data?)
-    ) async throws -> HTTPDataResponse {
+    @Sendable func handle(_ response: HTTPDataResponse) async throws -> HTTPDataResponse {
         try await self.middleware.handle(
             response,
             context: .init(
-                request: request.0,
-                requestData: request.1,
+                request: self.request.0,
+                requestData: self.request.1,
                 session: self.session,
-                next: { response, _ in return response }
+                next: { response in return response }
             )
         )
     }
@@ -79,17 +73,15 @@ private struct FinalHandler: HTTPResponseHandler {
 private struct Handler: HTTPResponseHandler {
     let middleware: any HTTPResponseMiddlewareProtocol
     let session: HTTPSession
-    let next: @Sendable (HTTPDataResponse, (HTTPRequest, Data?)) async throws -> HTTPDataResponse
+    let request: (HTTPRequest, Data?)
+    let next: @Sendable (HTTPDataResponse) async throws -> HTTPDataResponse
 
-    @Sendable func handle(
-        _ response: HTTPDataResponse,
-        from request: (HTTPRequest, Data?)
-    ) async throws -> HTTPDataResponse {
+    @Sendable func handle(_ response: HTTPDataResponse) async throws -> HTTPDataResponse {
         return try await self.middleware.handle(
             response,
             context: .init(
-                request: request.0,
-                requestData: request.1,
+                request: self.request.0,
+                requestData: self.request.1,
                 session: self.session,
                 next: self.next
             )
