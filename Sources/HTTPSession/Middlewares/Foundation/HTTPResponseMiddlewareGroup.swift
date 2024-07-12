@@ -10,8 +10,8 @@ public actor HTTPResponseMiddlewareGroup: Sendable {
 
     private let session: HTTPSession
 
-    init(session: HTTPSession) {
-        self.middlewares = []
+    init(session: HTTPSession, middlewares: [any HTTPResponseMiddlewareProtocol]) {
+        self.middlewares = middlewares
         self.session = session
     }
 

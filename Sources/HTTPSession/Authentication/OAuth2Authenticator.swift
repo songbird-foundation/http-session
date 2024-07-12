@@ -125,7 +125,7 @@ public actor OAuth2Authenticator: HTTPRequestMiddlewareProtocol {
 
     @Sendable nonisolated public func handle(_ request: inout HTTPRequest) async throws {
         do {
-            let token = try await self.validToken()
+            let token = try await self.validToken(forceRefresh: false)
             request.headerFields[.authorization] = "Bearer \(token.value)"
         } catch let error as TokenError {
             throw await self.coordinator.onTokenError(error)

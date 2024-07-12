@@ -7,18 +7,21 @@ public final class HTTPSession: HTTPSessionProtocol, @unchecked Sendable {
 
     private let session: URLSession
 
-    public let requestMiddlewares = HTTPRequestMiddlewareGroup()
+    public let requestMiddlewares: HTTPRequestMiddlewareGroup
     public var responseMiddlewares: HTTPResponseMiddlewareGroup!
 
     public init(
         session: URLSession = .shared,
         decoder: any HTTPDataDecoder = JSONDecoder(),
-        encoder: any HTTPDataEncoder = JSONEncoder()
+        encoder: any HTTPDataEncoder = JSONEncoder(),
+        requestMiddlewares: (any HTTPRequestMiddlewareProtocol)...,
+        responseMiddlewares: (any HTTPResponseMiddlewareProtocol)...
     ) {
         self.session = session
         self.encoder = encoder
         self.decoder = decoder
-        self.responseMiddlewares = HTTPResponseMiddlewareGroup(session: self)
+        self.requestMiddlewares = HTTPRequestMiddlewareGroup(middlewares: requestMiddlewares)
+        self.responseMiddlewares = HTTPResponseMiddlewareGroup(session: self, middlewares: responseMiddlewares)
     }
 
     /// Creates the final request (processed by all ``requestMiddlewares``)

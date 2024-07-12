@@ -3,8 +3,8 @@ import HTTPTypes
 public actor HTTPRequestMiddlewareGroup: Sendable {
     private var middlewares: [any HTTPRequestMiddlewareProtocol]
 
-    public init() {
-        self.middlewares = []
+    init(middlewares: [any HTTPRequestMiddlewareProtocol]) {
+        self.middlewares = middlewares
     }
 
     /// Adds the provided middleware to the beginning of the middleware chain.
