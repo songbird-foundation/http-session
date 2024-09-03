@@ -27,10 +27,7 @@ public enum HTTPResponsePayload {
     }
 }
 
-public struct HTTPDataResponse {
-    public let data: HTTPResponsePayload
-    public let response: HTTPResponse
-}
+public typealias HTTPDataResponse = (data: HTTPResponsePayload, response: HTTPResponse)
 
 /// Used to create middlewares to process responses received from an implementation of ``HTTPSessionProtocol``.
 ///
