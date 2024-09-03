@@ -57,7 +57,7 @@ public final class HTTPSession: HTTPSessionProtocol, @unchecked Sendable {
         withContent data: D
     ) async throws -> (T, HTTPResponse) {
         let response: (Data, HTTPResponse) = try await self.perform(request, withContent: data)
-        let content = try self.decoder.decode(T.self, from: .init(data: .data(response.0), response: response.1))
+        let content = try self.decoder.decode(T.self, from: response.0, response: response.1)
         return (content, response.1)
     }
 
@@ -66,13 +66,13 @@ public final class HTTPSession: HTTPSessionProtocol, @unchecked Sendable {
         withData data: Data
     ) async throws -> (T, HTTPResponse) {
         let response: (Data, HTTPResponse) = try await self.perform(request, withData: data)
-        let content = try self.decoder.decode(T.self, from: .init(data: .data(response.0), response: response.1))
+        let content = try self.decoder.decode(T.self, from: response.0, response: response.1)
         return (content, response.1)
     }
 
     public func execute<T: Decodable>(_ request: HTTPRequest) async throws -> (T, HTTPResponse) {
         let response: (Data, HTTPResponse) = try await self.perform(request)
-        let content = try self.decoder.decode(T.self, from: .init(data: .data(response.0), response: response.1))
+        let content = try self.decoder.decode(T.self, from: response.0, response: response.1)
         return (content, response.1)
     }
 
@@ -121,7 +121,7 @@ public final class HTTPSession: HTTPSessionProtocol, @unchecked Sendable {
         return (stream, response.response)
     }
 
-    public func execute(_ request: HTTPRequest, withData data: Data?) async throws -> HTTPDataResponse {
+    public func execute(_ request: HTTPRequest, withData data: Data?) async throws -> (Data, HTTPResponse) {
         var request = request
         try await self.requestMiddlewares.handle(&request)
         let rawResponse = if let data {
@@ -131,6 +131,6 @@ public final class HTTPSession: HTTPSessionProtocol, @unchecked Sendable {
         }
         let responseHandler = try await self.responseMiddlewares.constructHandler(for: (request, data))
         let response = try await responseHandler.handle(.init(data: .data(rawResponse.0), response: rawResponse.1))
-        return response
+        return try (response.data.requireData(), response.response)
     }
 }
