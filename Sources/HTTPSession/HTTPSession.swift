@@ -2,8 +2,8 @@ import Foundation
 import HTTPTypes
 
 public final class HTTPSession: HTTPSessionProtocol, @unchecked Sendable {
-    let decoder: any HTTPDataDecoder
-    let encoder: any HTTPDataEncoder
+    public let decoder: any HTTPDataDecoder
+    public let encoder: any HTTPDataEncoder
 
     private let session: URLSession
 
