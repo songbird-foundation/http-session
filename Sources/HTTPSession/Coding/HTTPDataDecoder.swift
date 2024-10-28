@@ -12,7 +12,19 @@ public protocol HTTPDataDecoder: Sendable {
 }
 
 extension JSONDecoder: HTTPDataDecoder { 
-    public func decode<T: Decodable>(_ type: T.Type, from data: Data, response: HTTPResponse) throws -> T {
-        try self.decode(T.self, from: data)
+    public func decode<T: Decodable>(
+        _ type: T.Type,
+        from responseData: Data,
+        response: HTTPResponse
+    ) throws -> T {
+        let data: Data
+        if response.status == .noContent {
+            data = try JSONEncoder().encode(Optional<_NilContainer>.none)
+        } else {
+            data = responseData
+        }
+        return try self.decode(T.self, from: data)
     }
 }
+
+struct _NilContainer: Codable {}
